@@ -128,6 +128,7 @@ class Hue2MQTT:
 
     async def _publish_bridge_status(self, *, online: bool = True) -> None:
         """Publish info about the Hue Bridge."""
+        info = None
         if online:
             LOGGER.info(f"Bridge Name: {self._bridge.config.name}")
             LOGGER.info(f"Bridge MAC: {self._bridge.config.mac}")
@@ -138,23 +139,30 @@ class Hue2MQTT:
                 mac_address=self._bridge.config.mac,
                 api_version=self._bridge.config.apiversion,
             )
-            message = Hue2MQTTStatus(online=online, bridge=info)
-        else:
-            message = Hue2MQTTStatus(online=online)
 
+        message = Hue2MQTTStatus(online=online, bridge=info)
         self._mqtt.publish("status", message)
-
+    
     def publish_light(self, light: LightInfo) -> None:
         """Publish information about a light to MQTT."""
-        self._mqtt.publish(f"light/{light.uniqueid}", light, retain=True)
+        if self.config.mqtt.topic_scheme == "id":
+            self._mqtt.publish(f"light/{light.uniqueid}", light)
+        elif self.config.mqtt.topic_scheme == "name":
+            self._mqtt.publish(f"light/{light.name.lower()}", light)
 
     def publish_group(self, group: GroupInfo) -> None:
         """Publish information about a group to MQTT."""
-        self._mqtt.publish(f"group/{group.id}", group, retain=True)
+        if self.config.mqtt.topic_scheme == "id":
+            self._mqtt.publish(f"group/{group.id}", group)
+        elif self.config.mqtt.topic_scheme == "name":
+            self._mqtt.publish(f"group/{group.name.lower()}", group)
 
     def publish_sensor(self, sensor: SensorInfo) -> None:
         """Publish information about a group to MQTT."""
-        self._mqtt.publish(f"sensor/{sensor.uniqueid}", sensor, retain=True)
+        if self.config.mqtt.topic_scheme == "id":
+            self._mqtt.publish(f"sensor/{sensor.uniqueid}", sensor)
+        elif self.config.mqtt.topic_scheme == "name":
+            self._mqtt.publish(f"sensor/{sensor.name.lower()}", sensor)
 
     async def handle_set_light(self, match: Match[str], payload: str) -> None:
         """Handle an update to a light."""

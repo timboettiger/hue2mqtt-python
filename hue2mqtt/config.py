@@ -6,7 +6,7 @@ Common to all components.
 from pathlib import Path
 from typing import IO, Optional
 
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel, parse_obj_as, ValidationError, validator
 
 # Backwards compatibility for TOML in stdlib from Python 3.11
 try:
@@ -36,8 +36,20 @@ class MQTTBrokerInfo(BaseModel):
     username: str = ""
     password: str = ""
     enable_tls: bool = False
+    messages_retain: bool = True    # Sets Retain-flag when messages getting sent
+    messages_qos: int = 1           # Sets QoS used when messages getting sent
+    messages_cache: bool = True     # Caches topic/value-pairs to only send changes ones
     topic_prefix: str = "hue2mqtt"
+    topic_distinct: bool = False    # Publishes all attributes as individual topics
+    topic_scheme: str = "id"        # "id": unique identifier id of hue device, "name": name of hue device
     force_protocol_version_3_1: bool = False
+
+    @validator('topic_scheme')
+    def valid_topic_scheme(cls, v):
+        v = v.lower()
+        if v not in ["id", "name"]:
+            raise ValueError('must be either "id" or "name"')
+        return v
 
     class Config:
         """Pydantic config."""

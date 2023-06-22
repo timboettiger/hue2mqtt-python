@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from json import dumps
 from typing import Any, Callable, Coroutine, Dict, List, Match, Optional
 
 import gmqtt
@@ -37,6 +38,7 @@ class MQTTWrapper:
         self._client_name = client_name
         self._broker_info = broker_info
         self._last_will = last_will
+        self._cache = {}
 
         self._topic_handlers: Dict[Topic, Handler] = {}
 
@@ -141,10 +143,9 @@ class MQTTWrapper:
         topic: str,
         payload: BaseModel,
         *,
-        retain: bool = False,
         auto_prefix_topic: bool = True,
     ) -> None:
-        """Publish a payload to the broker."""
+        """Wrapper to publish a payload to the broker."""
         if not self.is_connected:
             LOGGER.error(
                 "Attempted to publish message, but client is not connected.",
@@ -161,13 +162,17 @@ class MQTTWrapper:
 
         if not topic_complete.is_publishable:
             raise ValueError(f"Cannot publish to MQTT topic: {topic_complete}")
-
-        self._client.publish(
-            str(topic_complete),
-            payload.json(by_alias=True, exclude_none=True),
-            qos=1,
-            retain=retain,
-        )
+ 
+        if self._broker_info.topic_distinct:
+            self._walk_dict(
+                str(topic_complete),
+                payload.dict(),
+            )
+        else:
+            self._publish(
+                str(topic_complete), 
+                payload.json(by_alias=True, exclude_none=True)
+            )
 
     def subscribe(
         self,
@@ -187,3 +192,56 @@ class MQTTWrapper:
             topic_complete = Topic.parse(f"{self._broker_info.topic_prefix}/{topic}")
 
         self._topic_handlers[topic_complete] = callback
+
+    def _publish(
+            self,
+            topic: str,
+            payload: str
+        ) -> None:
+        """
+        Publish a payload to the broker.
+        
+        Respect message_cache option.
+        
+        Should only by called by publish and _walk_dict methods.
+        """
+        publish = True
+        if topic in self._cache:
+            publish = self._cache[topic] != payload
+        
+        if publish:
+            if self._broker_info.messages_cache:
+                self._cache[topic] = payload
+                
+            self._client.publish(
+                topic,
+                payload,
+                qos=self._broker_info.messages_qos,
+                retain=self._broker_info.messages_retain,
+            )
+        
+    def _walk_dict(
+            self,
+            topic: str,
+            payload: dict
+        ) -> None:
+        """
+        Publishes every key-value pair in a dictionary to the broker.
+        
+        Should only by called by publish and _walk_dict methods.
+        """
+        for attribute in payload.items():
+            topic_complete = "{0}/{1}".format(topic, attribute[0])
+            value = attribute[1]
+            if isinstance(value, Dict):
+                self._walk_dict(
+                    topic_complete, 
+                    value
+                )
+            elif value != None:
+                self._publish(
+                    topic_complete, 
+                    dumps(value)
+                )
+        
+            
