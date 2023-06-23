@@ -51,6 +51,18 @@ class MQTTBrokerInfo(BaseModel):
             raise ValueError('must be either "id" or "name"')
         return v
 
+    @validator('messages_qos')
+    def valid_qos(cls, v):
+        if v < 0 and v > 2:
+            raise ValueError('must be either 0, 1 or 2')
+        return v
+
+    @validator('port')
+    def valid_port(cls, v):
+        if v < 0 and v > 65535:
+            raise ValueError('must be between 0 and 65535')
+        return v
+
     class Config:
         """Pydantic config."""
 

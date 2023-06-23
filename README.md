@@ -15,14 +15,40 @@ Hue2MQTT lets you control your Hue setup using MQTT and publishes the current st
 
 ## Configuration
 
-Hue2MQTT is configured using `hue2mqtt.toml`.
+Hue2MQTT is configured using `hue2mqtt.toml`. A default configuration is provided with hue2mqtt.example.toml
+
+`messages_retain`
+
+Set the retain flag for mqtt messages. Possible values are true (enabled) and false (disabled)
+
+`messages_qos`
+
+Define the quality of service respective delivery guarantee for mqtt messages. Can be 0 (at most once), 1 (at least once) or 2 (exactly one).
+
+`messages_cache`
+
+Enables the caching value per topic sent by mqtt to ensure that only modified values are sent. Possible values are true (cache) and false (do not cache).
+
+`topic_prefix`
+
+Set the prefix of the topic for mqtt messages. Can contain any ASCII character, keep in mind that a slash ("/") splits the topic into two or more segments. This is why there must not be a slash at the end of the prefix.
+
+`topic_distinct`
+Splits the JSON value of topics into seperate topics by adding segments each for an JSON attribute. Takes into account the nesting of JSON values.
+
+`topic_scheme`
+
+Defines the style of topic structure: Segments of devices are named either by their unique id (00:00:00:00:00:00:00:00-00) or by the speaking name in lowercase assigned in the hue app.
+
+Examples for topics with `topic_distinct` disabled: `/hue2mqtt/light/00:17:88:01:ab:cd:ef:01-02` or `/hue2mqtt/light/lounge lamp`
+
+Examples for topics with `topic_distinct` enabled: `/hue2mqtt/light/00:17:88:01:ab:cd:ef:01-02/state/on` or `/hue2mqtt/light/lounge lamp/state/on`
+
 
 ```toml
 # Hue2MQTT Default Config File
 
 [mqtt]
-# use host.docker.internal to connect to mqtt broker installed on docker host
-# host = "host.docker.internal"
 host = "::1"
 port = 1883
 enable_tls = false
@@ -32,11 +58,17 @@ enable_auth = false
 username = ""
 password = ""
 
+messages_retain = true
+messages_qos = 1
+messages_cache = true
+
 topic_prefix = "hue2mqtt"
+topic_distinct = false
+topic_scheme = "id"
 
 [hue]
-ip = "192.0.2.2"  # or IPv6: "[2001:db0::1]"
-username = "some secret here"
+ip = "192.168.0.1"  # or IPv6: "[::ffff:c0a8:1]"
+username = "aB1cDEf2Gh3IjklLMNoPqrstuVWxYZAbCdEFg4hi"
 ```
 
 If you do not know the username for your bridge, find it using `hue2mqtt --discover`.
@@ -75,9 +107,13 @@ Information about the state of Hue is published to MQTT as retained messages. Me
 
 ### Lights
 
-Information about lights is published to `hue2mqtt/light/{{UNIQUEID}}` where `UNIQUEID` is the Zigbee MAC of the light.
+Information about lights is published by default to `hue2mqtt/light/{{UNIQUEID}}` where `UNIQUEID` is the Zigbee MAC of the light.
 
 e.g `hue2mqtt/light/00:17:88:01:ab:cd:ef:01-02`
+
+When `topic_scheme` is set to `name`, it will be published to `hue2mqtt/light/{{NAME}}` where `NAME` is the speaking name in lowercase assigned in the hue app to the device.
+
+e.g `hue2mqtt/group/lounge`
 
 ```json
 {"id": 1, "name": "Lounge Lamp", "uniqueid": "00:17:88:01:ab:cd:ef:01-02", "state": {"on": false, "alert": "none", "bri": 153, "ct": 497, "effect": "none", "hue": 7170, "sat": 225, "xy": [0, 0], "transitiontime": null, "reachable": true, "color_mode": null, "mode": "homeautomation"}, "manufacturername": "Signify Netherlands B.V.", "modelid": "LCT012", "productname": "Hue color candle", "type": "Extended color light", "swversion": "1.50.2_r30933"}
@@ -88,7 +124,11 @@ e.g `hue2mqtt/light/00:17:88:01:ab:cd:ef:01-02`
 
 A group represents a group of lights, referred to as Rooms and Zones in the Hue app.
 
-Information about lights is published to `hue2mqtt/group/{{GROUPID}}` where `GROUPID` is an integer.
+Information about lights is published by default to `hue2mqtt/group/{{GROUPID}}` where `GROUPID` is an integer.
+
+When `topic_scheme` is set to `name`, it will be published to `hue2mqtt/group/{{NAME}}` where `NAME` is the speaking name in lowercase assigned in the hue app to the device.
+
+e.g `hue2mqtt/group/lounge`
 
 ```json
 hue2mqtt/group/3 {"id": 3, "name": "Lounge", "lights": [24, 21, 20, 3, 5], "sensors": [], "type": "Room", "state": {"all_on": false, "any_on": false}, "group_class": "Living room", "action": {"on": false, "alert": "none", "bri": 153, "ct": 497, "effect": "none", "hue": 7170, "sat": 225, "xy": [0, 0], "transitiontime": null, "reachable": null, "color_mode": null, "mode": null}}
@@ -98,9 +138,13 @@ hue2mqtt/group/3 {"id": 3, "name": "Lounge", "lights": [24, 21, 20, 3, 5], "sens
 
 Sensors represent other objects in the Hue ecosystem, such as switches and motion sensors. There are also a number of "virtual" sensors that the Hue Hub uses to represent calculated values (e.g `daylight`), but these are ignored by Hue2MQTT.
 
-Information about sensors is published to `hue2mqtt/sensor/{{UNIQUEID}}` where `UNIQUEID` is the Zigbee MAC of the device.
+Information about sensors is published by default to `hue2mqtt/sensor/{{UNIQUEID}}` where `UNIQUEID` is the Zigbee MAC of the device.
 
 e.g `hue2mqtt/sensor/00:17:88:01:ab:cd:ef:01-02`
+
+When `topic_scheme` is set to `name`, it will be published to `hue2mqtt/sensor/{{NAME}}` where `NAME` is the speaking name in lowercase assigned in the hue app to the device.
+
+e.g `hue2mqtt/sensor/lounge switch`
 
 **Switch**
 
@@ -128,9 +172,9 @@ The object should be a JSON object containing the state values that you wish to 
 
 Included is a basic Dockerfile and docker-compose example. 
 
-### Connections to Docker Host
+### MQTT Connections to the Docker Host
 
-To establish a MQTT-Connection to the Docker Host (localhost is the docker instance) use host.docker.internal inside hue2mqtt.toml
+To establish a MQTT-Connection to the Docker Host (localhost is in fact the docker instance itself) use `host.docker.internal` to describe the host within hue2mqtt.toml
 
 ```toml
 host = "host.docker.internal"
