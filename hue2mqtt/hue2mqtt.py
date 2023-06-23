@@ -145,24 +145,18 @@ class Hue2MQTT:
     
     def publish_light(self, light: LightInfo) -> None:
         """Publish information about a light to MQTT."""
-        if self.config.mqtt.topic_scheme == "id":
-            self._mqtt.publish(f"light/{light.uniqueid}", light)
-        elif self.config.mqtt.topic_scheme == "name":
-            self._mqtt.publish(f"light/{light.name.lower()}", light)
-
+        identifier = {"id": light.uniqueid, "name": light.name.lower()}[self.config.mqtt.topic_scheme]
+        self._mqtt.publish(f"light/{identifier}", light)
+        
     def publish_group(self, group: GroupInfo) -> None:
         """Publish information about a group to MQTT."""
-        if self.config.mqtt.topic_scheme == "id":
-            self._mqtt.publish(f"group/{group.id}", group)
-        elif self.config.mqtt.topic_scheme == "name":
-            self._mqtt.publish(f"group/{group.name.lower()}", group)
+        identifier = {"id": group.id, "name": group.name.lower()}[self.config.mqtt.topic_scheme]
+        self._mqtt.publish(f"group/{identifier}", group)
 
     def publish_sensor(self, sensor: SensorInfo) -> None:
         """Publish information about a group to MQTT."""
-        if self.config.mqtt.topic_scheme == "id":
-            self._mqtt.publish(f"sensor/{sensor.uniqueid}", sensor)
-        elif self.config.mqtt.topic_scheme == "name":
-            self._mqtt.publish(f"sensor/{sensor.name.lower()}", sensor)
+        identifier = {"id": sensor.uniqueid, "name": sensor.name.lower()}[self.config.mqtt.topic_scheme]
+        self._mqtt.publish(f"sensor/{identifier}", sensor)
 
     async def handle_set_light(self, match: Match[str], payload: str) -> None:
         """Handle an update to a light."""
