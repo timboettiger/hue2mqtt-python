@@ -143,7 +143,7 @@ class MQTTWrapper:
         topic: str,
         payload: BaseModel,
         *,
-        auto_prefix_topic: bool = True,
+        auto_prefix_topic: bool = True
     ) -> None:
         """Wrapper to publish a payload to the broker."""
         if not self.is_connected:
