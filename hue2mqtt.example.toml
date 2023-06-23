@@ -1,15 +1,85 @@
 # Hue2MQTT Default Config File
 
 [mqtt]
+# defines the hostname or ip of the mqtt broker
 # use host.docker.internal to connect to mqtt broker installed on docker host
-# host = "host.docker.internal"
+# - possible values: ip address (ipv4/ipv6), hostname/domain, "host.docker.internal" (docker host)
+# - default = "::1"
 host = "::1"
+
+# defines the port of the mqtt broker
+# - possible values: any port number between 0 and 65535
+# - default = "1883"
 port = 1883
+
+# enable tls validation for mqtt connection
+# - possible values: true (enabled), false (disabled)
+# - default: false
 enable_tls = false
+
+# force mqtt protocol version 3.1
+# - possible values: true (force), false (not forced)
+# - default: true
 force_protocol_version_3_1 = true
 
+# enable authentication on mqtt broker
+# - possible values: true (enabled), false (disabled)
+# - default: false
+enable_auth = false
+
+# set username to authenticate on mqtt broker when enabled
+# - possible values: username string
+# - default: placeholder
+username = "user"
+
+# set password to authenticate on mqtt broker when enabled
+# - possible values: password string
+# - default: placeholder
+password = "****"
+
+# set the retain flag for mqtt messages
+# - possible values: true (enabled), false (disabled)
+# - default: true
+messages_retain = true
+
+# set quality of service (delivery guarantee) for mqtt messages
+# - possible values: 0 (at most once), 1 (at least once) or 2 (exactly one)
+# - default: 1
+messages_qos = 1
+
+# caches value per topic sent by mqtt to ensure that only modified values are sent
+# - possible values: true (cached), false (not cached)
+# - default: true
+messages_cache = true
+
+# set the topic prefix ("root node") for mqtt messages
+# - possible value: an ascii string, "/" splits into two or more nodes
+# - default: "hue2mqtt"
 topic_prefix = "hue2mqtt"
 
+# splits the json value of topics into seperate topics
+# - possible value: false (submit json object), true (individual topic per json value)
+# - default: false
+topic_distinct = false
+
+# defines the style of topic structure
+# - possible value:
+#     - "id": devices are named by hue unique-id
+#         /hue2mqtt/lights/{00:00:00:00:00:00:00:00-00}[/...]
+#     - "name": devices are named by their name assigned in hue app
+#         /hue2mqtt/lights/{hue device name set by app}[/...]
+# default: "id"
+topic_scheme = "id"
+
+
 [hue]
-ip = "192.0.2.2"
-username = "some secret here"
+# defines the hostname or ip of the hue box
+# - possible values: ip address (ipv4/ipv6), hostname/domain
+# - default = placeholder
+ip = "192.168.1.1"
+
+# defines the username resp. api-key provided by philips hue box api
+# if you do not know the username for your bridge, find it using `hue2mqtt --discover`.
+# - possible values: username resp. api-key string
+# - default = placeholder
+username = "aB1cDEf2Gh3IjklLMNoPqrstuVWxYZAbCdEFg4hi"
