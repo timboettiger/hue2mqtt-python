@@ -17,6 +17,8 @@ Hue2MQTT lets you control your Hue setup using MQTT and publishes the current st
 
 Hue2MQTT is configured using `hue2mqtt.toml`. A default configuration is provided with hue2mqtt.example.toml
 
+### Config Options
+
 `messages_retain`
 
 Set the retain flag for mqtt messages. Possible values are true (enabled) and false (disabled)
@@ -44,9 +46,9 @@ Examples for topics with `topic_distinct` disabled: `/hue2mqtt/light/00:17:88:01
 
 Examples for topics with `topic_distinct` enabled: `/hue2mqtt/light/00:17:88:01:ab:cd:ef:01-02/state/on` or `/hue2mqtt/light/lounge lamp/state/on`
 
+### Hue2MQTT Default Config File
 
 ```toml
-# Hue2MQTT Default Config File
 
 [mqtt]
 host = "::1"
