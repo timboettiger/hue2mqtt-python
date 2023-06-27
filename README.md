@@ -131,7 +131,7 @@ When `topic_scheme` is set to `name`, it will be published to `hue2mqtt/group/{{
 
 e.g `hue2mqtt/group/lounge`
 
-```json
+```
 hue2mqtt/group/3 {"id": 3, "name": "Lounge", "lights": [24, 21, 20, 3, 5], "sensors": [], "type": "Room", "state": {"all_on": false, "any_on": false}, "group_class": "Living room", "action": {"on": false, "alert": "none", "bri": 153, "ct": 497, "effect": "none", "hue": 7170, "sat": 225, "xy": [0, 0], "transitiontime": null, "reachable": null, "color_mode": null, "mode": null}}
 ```
 
