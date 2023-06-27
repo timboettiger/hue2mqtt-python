@@ -1,7 +1,38 @@
 """Schemas for data about lights."""
+from enum import Enum
 from typing import Any, List, Optional, Tuple
-
 from pydantic import BaseModel, Field, create_model
+
+
+class BatteryState(str, Enum):
+    normal = 'normal'
+    low = 'low'
+    critical = 'critical'
+
+
+class PowerState(BaseModel):
+    """The state of power."""
+
+    battery_level: Optional[int] = None
+    battery_state: Optional[BatteryState] = None
+
+
+class UpdateState(str, Enum):
+    not_updatable = 'notupdatable'
+    no_updates = 'noupdates'
+    
+
+class SoftwareUpdate(BaseModel):
+    """The state of software update."""
+
+    lastinstall: Optional[str] = None
+    state: Optional[UpdateState] = None
+
+
+class ColorMode(str, Enum):
+    hs = 'hs'
+    ct = 'ct'
+    xy = 'xy'
 
 
 class LightBaseState(BaseModel):
@@ -15,8 +46,7 @@ class LightBaseState(BaseModel):
     effect: Optional[str]
     hue: Optional[int]
     sat: Optional[int]
-    xy: Optional[Tuple[int, int]]
-    transitiontime: Optional[str]
+    xy: Optional[Tuple[float, float]] = None
 
 
 class LightSetState(LightBaseState):
@@ -29,17 +59,11 @@ class LightSetState(LightBaseState):
     xy_inc: Optional[int]
 
 
-class GroupSetState(LightSetState):
-    """The settable states of a group."""
-
-    scene: Optional[str]
-
-
 class LightState(LightBaseState):
     """The State of a light that we can read."""
 
     reachable: Optional[bool]
-    color_mode: Optional[str]
+    colormode: Optional[ColorMode]
     mode: Optional[str]
 
 
@@ -57,6 +81,65 @@ class LightInfo(BaseModel):
     type: str  # noqa: A003
 
     swversion: str
+    swupdate: Optional[SoftwareUpdate]
+
+
+class GroupType(str, Enum):
+    Luminaire = 'Luminaire'
+    Lightsource = 'Lightsource'
+    LightGroup = 'LightGroup'
+    Room = 'Room'
+    Entertainment = 'Entertainment'
+    Zone = 'Zone'
+
+
+class GroupClass(str, Enum):
+    living_room = 'Living room'
+    recreation = 'Recreation'
+    terrace = 'Terrace'
+    kitchen = 'Kitchen'
+    office = 'Office'
+    garden = 'Garden'
+    dining = 'Dining'
+    gym = 'Gym'
+    driveway = 'Driveway'
+    bedroom = 'Bedroom'
+    hallway = 'Hallway'
+    carport = 'Carport'
+    kids_bedroom = 'Kids bedroom'
+    toilet = 'Toilet'
+    other = 'Other'
+    bathroom = 'Bathroom'
+    front_door = 'Front door'
+    nursery = 'Nursery'
+    garage = 'Garage'
+    home = 'Home'
+    lounge = 'Lounge'
+    closet = 'Closet'
+    downstairs = 'Downstairs'
+    man_cave = 'Man cave'
+    storage = 'Storage'
+    upstairs = 'Upstairs'
+    computer = 'Computer'
+    laundry_room = 'Laundry room'
+    top_floor = 'Top floor'
+    studio = 'Studio'
+    balcony = 'Balcony'
+    attic = 'Attic'
+    music = 'Music'
+    porch = 'Porch'
+    guest_room = 'Guest room'
+    television = 'TV'
+    barbecue = 'Barbecue'
+    staircase = 'Staircase'
+    reading = 'Reading'
+    pool = 'Pool'
+
+
+class GroupSetState(LightSetState):
+    """The settable states of a group."""
+
+    scene: Optional[str]
 
 
 class GroupState(BaseModel):
@@ -73,10 +156,10 @@ class GroupInfo(BaseModel):
     name: str
     lights: List[int]
     sensors: List[int]
-    type: str  # noqa: A003
+    type: GroupType  # noqa: A003
     state: GroupState
 
-    group_class: Optional[str] = Field(default=None, alias="class")
+    group_class: Optional[GroupClass] = Field(default=None, alias="class")
 
     action: LightState
 
@@ -85,6 +168,7 @@ class GenericSensorState(BaseModel):
     """Information about the state of a sensor."""
 
     lastupdated: Optional[str] = None
+    power_state: Optional[PowerState] = None
 
 
 class PresenceSensorState(GenericSensorState):
@@ -112,19 +196,19 @@ class LightLevelSensorState(GenericSensorState):
 
     dark: Optional[bool] = None
     daylight: Optional[bool] = None
-    lightlevel: Optional[int] = None
+    lightlevel: Optional[float] = None
 
 
 class TemperatureSensorState(GenericSensorState):
     """Information about the state of a sensor."""
 
-    temperature: Optional[int] = None
+    temperature: Optional[float] = None
 
 
 class HumiditySensorState(GenericSensorState):
     """Information about the state of a sensor."""
 
-    humidity: Optional[int] = None
+    humidity: Optional[float] = None
 
 
 class OpenCloseSensorState(GenericSensorState):
@@ -159,6 +243,8 @@ class SensorInfo(BaseModel):
     productname: str
     uniqueid: str
     swversion: Optional[str]
+    swupdate: Optional[SoftwareUpdate]
 
+    power_state: Optional[PowerState] = None
     state: SensorState  # type: ignore[valid-type]
     capabilities: Any

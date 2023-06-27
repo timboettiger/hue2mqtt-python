@@ -12,4 +12,4 @@ RUN pip install .
 
 VOLUME [ "./hue2mqtt.toml" ]
 
-CMD ["hue2mqtt"]
+ENTRYPOINT ["hue2mqtt"]
