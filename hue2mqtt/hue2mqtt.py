@@ -13,6 +13,7 @@ import sys
 from signal import SIGHUP, SIGINT, SIGTERM
 from types import FrameType
 from typing import Match, Optional
+#from icecream import ic
 
 import aiohue
 from aiohttp.client import ClientSession
@@ -45,11 +46,9 @@ class Hue2MQTT:
         self,
         verbose: bool,
         config_file: Optional[str],
-        *,
-        name: str = "hue2mqtt",
+        *
     ) -> None:
         self.config = Hue2MQTTConfig.load(config_file)
-        self.name = name
 
         self._setup_logging(verbose)
         self._setup_event_loop()
@@ -82,7 +81,7 @@ class Hue2MQTT:
 
     def _setup_mqtt(self) -> None:
         self._mqtt = MQTTWrapper(
-            self.name,
+            self.config.clientid,
             self.config.mqtt,
             last_will=Hue2MQTTStatus(online=False),
         )
@@ -201,18 +200,24 @@ class Hue2MQTT:
         """Main method of the data component."""
         # Publish initial info about lights
         for idx, light_raw in self._bridge.lights._items.items():
+            #ic(light_raw.__dict__)
             light = LightInfo(id=idx, **light_raw.raw)
+            #ic(light.__dict__)
             self.publish_light(light)
 
         # Publish initial info about groups
         for idx, group_raw in self._bridge.groups._items.items():
+            #ic(group_raw.__dict__)
             group = GroupInfo(id=idx, **group_raw.raw)
+            #ic(group.__dict__)
             self.publish_group(group)
 
         # Publish initial info about sensors
         for idx, sensor_raw in self._bridge.sensors._items.items():
             if "uniqueid" in sensor_raw.raw and "productname" in sensor_raw.raw:
+                #ic(sensor_raw.__dict__)
                 sensor = SensorInfo(id=idx, **sensor_raw.raw)
+                #ic(sensor.__dict__)
                 self.publish_sensor(sensor)
             else:
                 LOGGER.debug(f"Ignoring virtual sensor: {sensor_raw.name}")

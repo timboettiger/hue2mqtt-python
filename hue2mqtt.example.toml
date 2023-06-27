@@ -27,6 +27,11 @@ force_protocol_version_3_1 = true
 # - default: false
 enable_auth = false
 
+# set client id submitted to mqtt broker when connecting
+# - possible values: client id string
+# - default: "hue2mqtt"
+clientid = "hue2mqtt"
+
 # set username to authenticate on mqtt broker when enabled
 # - possible values: username string
 # - default: placeholder

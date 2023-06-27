@@ -55,6 +55,7 @@ enable_tls = false
 force_protocol_version_3_1 = true
 
 enable_auth = false
+clientid = "hue2mqtt"
 username = ""
 password = ""
 
@@ -157,6 +158,10 @@ e.g `hue2mqtt/sensor/lounge switch`
 ```json
 {"id": 5, "name": "Hue ambient light sensor 1", "type": "ZLLLightLevel", "modelid": "SML001", "manufacturername": "Signify Netherlands B.V.", "productname": "Hue ambient light sensor", "uniqueid": "00:17:88:01:04:b7:b5:20-02-0400", "swversion": "6.1.1.27575", "state": {"lastupdated": "2021-07-10T12:28:17", "dark": true, "daylight": false, "lightlevel": 14606}, "capabilities": {"certified": true, "primary": false}}
 ```
+
+**Temperature Sensor**
+
+
 
 ## Controlling Hue
 

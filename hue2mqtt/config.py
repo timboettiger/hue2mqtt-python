@@ -33,6 +33,7 @@ class MQTTBrokerInfo(BaseModel):
     host: str
     port: int
     enable_auth: bool = False
+    clientid: str = "hue2mqtt"
     username: str = ""
     password: str = ""
     enable_tls: bool = False
